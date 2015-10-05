@@ -5,10 +5,22 @@ RUN locale-gen en_US.UTF-8
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
+ENV PYPY_VERSION 2.4.0
+
+RUN gpg --keyserver hkp://pool.sks-keyservers.net --recv-key 2862D0785AFACD8C65B23DB0251104D968854915
+RUN gpg --export 2862D0785AFACD8C65B23DB0251104D968854915 | apt-key add -
+
+RUN echo "deb http://ppa.launchpad.net/pypy/ppa/ubuntu trusty main" >> /etc/apt/sources.list
+RUN echo "deb-src http://ppa.launchpad.net/pypy/ppa/ubuntu trusty main" >> /etc/apt/sources.list
 
 RUN apt-get -y update
 RUN apt-get -y upgrade
-RUN apt-get -y install python python3 python-pip python3-pip
+RUN apt-get -y install curl python python3 python-pip python3-pip pypy
+
+# Install pypy3
+RUN set -x \
+	&& curl -SL "https://bitbucket.org/pypy/pypy/downloads/pypy3-${PYPY_VERSION}-linux64.tar.bz2" \
+		| tar -xjC /usr/local --strip-components=1
 
 RUN pip2 install --upgrade pip
 RUN pip3 install --upgrade pip
@@ -20,4 +32,5 @@ COPY requirements.in requirements.in
 
 RUN pip-compile requirements.in
 
+RUN pip2 wheel -r requirements.txt
 RUN pip3 wheel -r requirements.txt
